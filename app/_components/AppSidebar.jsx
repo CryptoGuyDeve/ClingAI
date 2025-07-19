@@ -13,6 +13,7 @@ import {
 import { Compass, GalleryHorizontal, LogIn, Search } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { Button } from '@/components/ui/button'
+import { SignOutButton, SignUpButton, UserButton, useUser } from '@clerk/nextjs'
 
 const MenuOptions = [
   {
@@ -33,13 +34,14 @@ const MenuOptions = [
   {
     title: 'Sign In',
     icon: LogIn,
-    path: '#'
+    path: '/sign-in'
   },
 ]
 
 
 function AppSidebar() {
   const path = usePathname();
+  const { user } = useUser();
   return (
     <Sidebar>
       <SidebarHeader className='bg-accent flex items-center py-5'>
@@ -66,16 +68,22 @@ function AppSidebar() {
               ))}
             </SidebarMenu>
 
-            <Button className='rounded-full mx-4 mt-4'>Sign Up</Button>
+        {!user?   <SignUpButton mode='modal'>
+              <Button className='rounded-full mx-4 mt-4'>Sign Up</Button>
+            </SignUpButton>:
+            <SignOutButton>
+              <Button className='rounded-full mx-4 mt-4'>Logout</Button>
+            </SignOutButton>}
           </SidebarContent>
         </SidebarGroup>
         <SidebarGroup />
       </SidebarContent>
       <SidebarFooter className='bg-accent'>
-        <div className='p-2'>
+        <div className='p-2 flex flex-col'>
           <h2 className='text-gray-600'>Try pro</h2>
           <p className='text-gray-400'>Upgrade for Image Upload, Smarter AI & more copilot</p>
-          <Button variant={'secondary'} className={'text-gray-500'}>Learn More</Button>
+          <Button variant={'secondary'} className={'text-gray-500 mb-3'}>Learn More</Button>
+          <UserButton />
         </div>
       </SidebarFooter>
     </Sidebar>
