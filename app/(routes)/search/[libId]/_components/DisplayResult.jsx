@@ -54,10 +54,21 @@ function DisplayResult({ searchInputRecord }) {
                 },
             ])
             .select()
-        console.log(data);
+        console.log(data.id);
+        await GenerateAIResp(formattedSearchResp, data.id)
 
 
         //Pass To LLM Model
+    }
+
+    const GenerateAIResp = async (formattedSearchResp, recordId) => {
+        const result = await axios.post('/api/llm-model', {
+            searchInput: searchInputRecord?.searchInput,
+            searchResult: formattedSearchResp,
+            recordId: recordId
+        });
+
+        console.log(result.data)
     }
 
     if (!searchInputRecord) {
