@@ -31,11 +31,6 @@ const MenuOptions = [
     icon: GalleryHorizontal,
     path: '/library'
   },
-  {
-    title: 'Sign In',
-    icon: LogIn,
-    path: '/sign-in'
-  },
 ]
 
 
@@ -68,12 +63,12 @@ function AppSidebar() {
               ))}
             </SidebarMenu>
 
-        {!user?   <SignUpButton mode='modal'>
+            {!user ? <SignUpButton mode='modal'>
               <Button className='rounded-full mx-4 mt-4'>Sign Up</Button>
-            </SignUpButton>:
-            <SignOutButton>
-              <Button className='rounded-full mx-4 mt-4'>Logout</Button>
-            </SignOutButton>}
+            </SignUpButton> :
+              <SignOutButton>
+                <Button className='rounded-full mx-4 mt-4'>Logout</Button>
+              </SignOutButton>}
           </SidebarContent>
         </SidebarGroup>
         <SidebarGroup />

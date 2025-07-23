@@ -42,7 +42,7 @@ function SearchQueryResult() {
     if (!searchInputRecord) return <div>No search input found.</div>;
 
     return (
-        <div>
+        <div style={{ overflowX: 'hidden' }} className="w-full">
             <Header searchInputRecord={searchInputRecord} />
             <div className='px-10 md:px-20 lg:px-36 xl:px-56 mt-10'>
                 {/* Search name at the top left */}
@@ -66,7 +66,7 @@ function SearchQueryResult() {
                 </div>
                 <div className="mt-6">
                     {activeTab === 'Answer' && (
-                        <AnswerDisplay searchInput={searchInputRecord.searchInput} />
+                        <AnswerDisplay searchInput={searchInputRecord.searchInput} libId={libId} />
                     )}
                     {activeTab === 'Images' && (
                         <ImagesDisplay searchInput={searchInputRecord.searchInput} />

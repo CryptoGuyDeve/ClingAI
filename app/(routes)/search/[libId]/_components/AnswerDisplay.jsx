@@ -2,14 +2,45 @@ import Image from 'next/image';
 import React, { useEffect, useState, useRef } from 'react'
 import DOMPurify from 'dompurify';
 import ReactMarkdown from 'react-markdown';
+import { supabase } from '@/services/supabase';
 
-function AnswerDisplay({ searchInput }) {
+function AnswerDisplay({ searchInput, libId }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [chatValue, setChatValue] = useState('');
   const chatInputRef = useRef(null);
   // Chat history: [{query, answer}]
   const [history, setHistory] = useState([]);
+
+  // Helper to fetch all previous chats for this libId
+  const fetchHistory = async () => {
+    if (!libId) return;
+    const { data: chats } = await supabase
+      .from('Chats')
+      .select('id, aiResp, created_at')
+      .eq('libId', libId)
+      .order('created_at', { ascending: true });
+    if (chats && chats.length > 0) {
+      let pairs = [];
+      let lastQuery = searchInput;
+      chats.forEach((chat, idx) => {
+        if (idx === 0 && searchInput) {
+          pairs.push({ query: searchInput, answer: chat.aiResp });
+        } else if (chat.aiResp) {
+          pairs.push({ query: '', answer: chat.aiResp });
+        }
+      });
+      setHistory(pairs);
+    } else if (searchInput) {
+      setHistory([{ query: searchInput, answer: '' }]);
+    }
+  };
+
+  // On mount, fetch all previous chats for this libId
+  useEffect(() => {
+    fetchHistory();
+    // eslint-disable-next-line
+  }, [libId]);
 
   // Helper to build Gemini contents array from history
   const buildGeminiHistory = (historyArr, newUserMsg) => {
@@ -20,6 +51,12 @@ function AnswerDisplay({ searchInput }) {
     });
     if (newUserMsg) contents.push({ role: 'user', parts: [{ text: newUserMsg }] });
     return contents;
+  };
+
+  // Save Gemini response to Supabase
+  const saveAIResponse = async (aiResp) => {
+    if (!libId || !aiResp) return;
+    await supabase.from('Chats').insert({ libId, aiResp });
   };
 
   // On initial searchInput prop, add to history if present
@@ -34,9 +71,10 @@ function AnswerDisplay({ searchInput }) {
       body: JSON.stringify({ contents })
     })
       .then(res => res.json())
-      .then(data => {
+      .then(async data => {
         if (data?.summary) {
           setHistory(prev => [...prev, { query: searchInput, answer: data.summary }]);
+          await saveAIResponse(data.summary);
         } else if (data?.error) {
           setError('Failed to fetch summary from Gemini.');
           setHistory(prev => [...prev, { query: searchInput, answer: '' }]);
@@ -69,13 +107,14 @@ function AnswerDisplay({ searchInput }) {
       body: JSON.stringify({ contents })
     })
       .then(res => res.json())
-      .then(data => {
+      .then(async data => {
         if (data?.summary) {
-          setHistory(prev => [...prev, { query: userQuery, answer: data.summary }]);
+          await saveAIResponse(data.summary);
+          await fetchHistory(); // Re-fetch after saving to prevent duplicates
         } else if (data?.error) {
           setError('Failed to fetch summary from Gemini.');
           setHistory(prev => [...prev, { query: userQuery, answer: '' }]);
-        } else {
+    } else {
           setError('No summary found.');
           setHistory(prev => [...prev, { query: userQuery, answer: '' }]);
         }
@@ -122,30 +161,30 @@ function AnswerDisplay({ searchInput }) {
                         }
                       }}
                     >{item.answer}</ReactMarkdown>
-                  </div>
+          </div>
                 ) : (
                   <div className="text-base leading-relaxed">
                     <ReactMarkdown>{item.answer}</ReactMarkdown>
-                  </div>
+        </div>
                 )}
                 {!item.answer && (
                   <div className="text-gray-400">No answer available.</div>
-                )}
-              </div>
-            </div>
+        )}
+      </div>
+          </div>
             {/* Separator */}
             {idx < history.length - 1 && (
               <div className="flex justify-center my-4">
                 <div className="h-4 w-1 bg-gray-300 rounded-full mx-2" />
                 <div className="h-4 w-1 bg-gray-300 rounded-full mx-2" />
                 <div className="h-4 w-1 bg-gray-300 rounded-full mx-2" />
-              </div>
-            )}
+        </div>
+      )}
           </div>
         ))}
         {loading && <div className="text-center text-gray-400 mt-4">Loading...</div>}
         {error && !loading && <div className="mt-8 w-full text-red-500 text-center">{error}</div>}
-        <style>{`
+      <style>{`
           pre {
             background: #1a202c;
             color: #fff;
@@ -156,26 +195,37 @@ function AnswerDisplay({ searchInput }) {
           }
           code {
             font-family: 'Fira Mono', 'Menlo', 'Monaco', 'Consolas', monospace;
-          }
-        `}</style>
+        }
+      `}</style>
       </div>
       <form
         onSubmit={handleChatSubmit}
-        className="sticky bottom-0 z-20 bg-white border-t border-gray-200 flex items-center gap-2 px-3 py-2 rounded-b-lg shadow-sm"
-        style={{ minHeight: 56 }}
+        className="sticky bottom-0 z-20 bg-gradient-to-r from-white via-blue-50 to-white border-t border-gray-200 flex items-center gap-2 px-4 py-3 rounded-b-2xl shadow-lg"
+        style={{ minHeight: 64 }}
       >
         <input
           ref={chatInputRef}
           type="text"
-          className="flex-1 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
-          placeholder="Ask more about this topic..."
+          className="flex-1 px-4 py-3 border-none rounded-xl bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400 text-base shadow-sm transition"
+          placeholder="Ask anything..."
           value={chatValue}
           onChange={e => setChatValue(e.target.value)}
           aria-label="Ask more about this topic"
         />
+       {chatValue && (
+         <button
+           type="button"
+           onClick={() => setChatValue('')}
+           className="text-gray-400 hover:text-gray-600 px-2 focus:outline-none"
+           tabIndex={-1}
+           aria-label="Clear input"
+         >
+           &#10005;
+         </button>
+       )}
         <button
           type="submit"
-          className="ml-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition disabled:opacity-50"
+          className="ml-2 px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold shadow hover:from-blue-700 hover:to-purple-700 transition disabled:opacity-50"
           disabled={loading || !chatValue.trim()}
         >
           Ask
@@ -340,10 +390,10 @@ function WebCarousel({ searchInput }) {
                   className='rounded-full'
                 />
                 <h2 className='text-xs font-semibold'>{item?.profile?.long_name}</h2>
-              </div>
+            </div>
               <h2 className='line-clamp-2 text-black text-xs mb-1'>{item?.description}</h2>
             </div>
-          ))}
+        ))}
         </div>
       </div>
     </div>
