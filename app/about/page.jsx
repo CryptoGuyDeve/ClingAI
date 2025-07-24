@@ -1,79 +1,60 @@
 import React from 'react';
 import Head from 'next/head';
+import AboutCopyBox from './AboutCopyBox';
 
 export const metadata = {
-  title: 'About Us | ClingAI',
-  description: 'Learn about ClingAI, the modern AI chat platform with Gemini, OpenAI, Supabase, Stripe, and more. Meet the team, discover our mission, and see why we are the best AI workspace for productivity, code, and research.'
+  title: 'About Us | ClingAI.space',
+  description: 'Learn about ClingAI.space, the modern AI assistant and search platform. Discover our story, mission, FAQs, and more. Built by FaizuRrehman, supported by CodeAndmotion.'
 };
 
 export default function AboutPage() {
   return (
     <div className="max-w-3xl mx-auto py-12 px-4">
       <Head>
-        <title>About Us | ClingAI</title>
-        <meta name="description" content="Learn about ClingAI, the modern AI chat platform with Gemini, OpenAI, Supabase, Stripe, and more. Meet the team, discover our mission, and see why we are the best AI workspace for productivity, code, and research." />
-        <meta name="keywords" content="ClingAI, AI chat, Gemini, OpenAI, Supabase, Stripe, AI workspace, productivity, code generation, research, FaizuRrehman, Pakistan, web development, software engineering, AI subscription, chat history, modern UI, Vercel, Clerk, Brave Search, Google Gemini, GPT-3.5, Gemini Pro, Gemini 2.0 Flash, react-markdown, Next.js, Stripe payments, Supabase database, AI credits, AI library, chat sidebar, discover page, analytics, SEO" />
+        <title>About Us | ClingAI.space</title>
+        <meta name="description" content="Learn about ClingAI.space, the modern AI assistant and search platform. Discover our story, mission, FAQs, and more. Built by FaizuRrehman, supported by CodeAndmotion." />
+        <meta name="keywords" content="ClingAI, ClingAI.space, AI chat, Gemini, OpenAI, Supabase, Stripe, AI workspace, productivity, code generation, research, FaizuRrehman, Pakistan, web development, software engineering, AI subscription, chat history, modern UI, Vercel, Clerk, Brave Search, Google Gemini, GPT-3.5, Gemini Pro, Gemini 2.0 Flash, react-markdown, Next.js, Stripe payments, Supabase database, AI credits, AI library, chat sidebar, discover page, analytics, SEO" />
       </Head>
-      <h1 className="text-4xl font-extrabold mb-4">About ClingAI</h1>
-      <p className="text-lg mb-6 text-gray-700">
-        <strong>ClingAI</strong> is a cutting-edge AI chat and productivity platform designed to empower users with the latest advancements in artificial intelligence. Built with Next.js, Supabase, Stripe, Clerk, and powered by Google Gemini and OpenAI, ClingAI offers a seamless, modern, and feature-rich workspace for research, code generation, and everyday productivity.
-      </p>
-      <h2 className="text-2xl font-bold mt-8 mb-2">Our Mission</h2>
-      <p className="mb-6 text-gray-700">
-        Our mission is to make advanced AI accessible, affordable, and easy to use for everyone. Whether you are a developer, student, researcher, or business professional, ClingAI provides the tools you need to chat, code, organize, and collaborate with AI in a beautiful, intuitive environment.
-      </p>
-      <h2 className="text-2xl font-bold mt-8 mb-2">Key Features</h2>
-      <ul className="list-disc pl-6 mb-6 text-gray-700">
-        <li>Modern AI chat interface with follow-up questions and chat history</li>
-        <li>Integration with Google Gemini (Pro, 2.0 Flash) and OpenAI (GPT-3.5 Turbo)</li>
-        <li>Web search results, image carousel, and code generation with syntax highlighting</li>
-        <li>Supabase-powered database for chat history, credits, and user management</li>
-        <li>Stripe subscription payments and real-time credit tracking</li>
-        <li>Library and sidebar for organizing and accessing all your chats</li>
-        <li>Responsive, glassmorphic, and modern UI/UX with loaders, animations, and dark mode</li>
-        <li>Clerk authentication for secure sign-in and user management</li>
-        <li>Vercel Analytics for usage tracking and performance</li>
-        <li>SEO-optimized, fast, and scalable for global users</li>
-      </ul>
-      <h2 className="text-2xl font-bold mt-8 mb-2">Meet the Founder</h2>
-      <div className="mb-6 text-gray-700">
-        <strong>FaizuRrehman</strong> — 16 y/o, Pakistan<br />
-        Founder & CEO of ClingAI<br />
-        Experienced in web development and a little bit in software engineering.<br />
-        Passionate about building the future of AI-powered productivity tools.<br />
-        <span className="italic">Company details coming soon!</span>
+      <div className="flex flex-col items-center mb-8">
+        <h1 className="text-4xl font-extrabold text-center mb-2 text-blue-700 tracking-tight">🧠 About Us – <span className="text-purple-600">ClingAI.space</span></h1>
+        <p className="text-lg text-gray-600 text-center max-w-2xl mb-4">Welcome to ClingAI, your modern AI assistant for smarter search, research, and productivity. Built by <span className="font-bold text-blue-700">FaizuRrehman</span> in Pakistan, supported by <span className="font-bold text-purple-600">CodeAndmotion</span> for media and GFX.</p>
+        <a href="https://x.com/Cling_AI" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline text-base flex items-center gap-1 mb-2">🐦 Follow us on Twitter/X <span className="font-mono">@Cling_AI</span></a>
+        <span className="text-xs text-gray-400">1 employee • Launched 2025 • Backend support by CodeAndmotion</span>
       </div>
-      <h2 className="text-2xl font-bold mt-8 mb-2">Why Choose ClingAI?</h2>
-      <ul className="list-disc pl-6 mb-6 text-gray-700">
-        <li>Affordable AI credits and subscription plans</li>
-        <li>Real-time credit tracking and easy top-up</li>
-        <li>Powerful AI models for code, research, and conversation</li>
-        <li>Organize your chats, code, and research in one place</li>
-        <li>Modern, beautiful, and responsive design</li>
-        <li>Secure, scalable, and privacy-focused</li>
-        <li>Built by a passionate team for the next generation of AI users</li>
-      </ul>
-      <h2 className="text-2xl font-bold mt-8 mb-2">Technologies We Use</h2>
-      <ul className="list-disc pl-6 mb-6 text-gray-700">
-        <li>Next.js (React framework)</li>
-        <li>Supabase (PostgreSQL database, authentication)</li>
-        <li>Stripe (payments, subscriptions)</li>
-        <li>Clerk (user authentication)</li>
-        <li>Google Gemini & OpenAI APIs</li>
-        <li>Brave Search API</li>
-        <li>react-markdown for code and markdown rendering</li>
-        <li>Tailwind CSS for modern UI</li>
-        <li>Vercel for hosting and analytics</li>
-      </ul>
-      <h2 className="text-2xl font-bold mt-8 mb-2">Contact & Socials</h2>
-      <p className="mb-6 text-gray-700">
-        For support, feedback, or partnership inquiries, please contact us at <a href="mailto:support@clingai.com" className="text-blue-600 underline">support@clingai.com</a>.<br />
-        Follow us on social media for updates and news (links coming soon).
-      </p>
-      <h2 className="text-2xl font-bold mt-8 mb-2">ClingAI — The Future of AI Workspaces</h2>
-      <p className="mb-12 text-gray-700">
-        Join thousands of users who trust ClingAI for their daily AI-powered productivity, research, and coding needs. Experience the future of AI chat and workspace — fast, modern, and built for you.
-      </p>
+      <AboutCopyBox />
+      <div className="prose prose-lg max-w-none text-gray-800">
+        <h2 className="text-2xl font-bold text-blue-700 mt-10 mb-2">✨ Our Origin Story</h2>
+        <p>FaizuRrehman was previously working at a company called <b>Ragon Solution</b>, a startup where he had invested his time and energy, trusting the environment and the people — including the founder, who was a friend. But things didn’t go as expected. Due to internal miscommunication and unprofessional HR handling, he was unexpectedly removed from the team — not because of performance, but due to internal politics and silence.</p>
+        <p>While it was a tough moment, FaizuRrehman decided not to dwell on what happened — instead, he made a promise to himself: <b>"I’ll build something better on my own. I’ll create something so useful, so well-crafted, that the world will see what I’m capable of."</b></p>
+        <p>That energy, ambition, and resilience became the foundation of ClingAI.</p>
+        <h2 className="text-2xl font-bold text-blue-700 mt-10 mb-2">🌐 Who We Are Today</h2>
+        <ul>
+          <li><b>Website:</b> <a href="https://clingai.space" className="text-blue-600 hover:underline">clingai.space</a></li>
+          <li><b>Built by:</b> A solo developer (currently 1 employee)</li>
+          <li><b>Backend Support:</b> CodeAndmotion (media, video editing, GFX)</li>
+          <li><b>Twitter (X):</b> <a href="https://x.com/Cling_AI" className="text-blue-600 hover:underline">@Cling_AI</a></li>
+          <li><b>Core Focus:</b> High-speed AI search, clean UX, lightweight performance, affordable access</li>
+        </ul>
+        <h2 className="text-2xl font-bold text-blue-700 mt-10 mb-2">💬 Our Philosophy</h2>
+        <ul>
+          <li>AI should be accessible, not intimidating.</li>
+          <li>Clean UI + fast responses = happy users.</li>
+          <li>Tools should respect your time and deliver instant value.</li>
+          <li>Even with limited resources, great products can be built with the right mindset.</li>
+        </ul>
+        <h2 className="text-2xl font-bold text-blue-700 mt-10 mb-2">❓ Frequently Asked Questions (FAQs)</h2>
+        <ul>
+          <li><b>What is ClingAI?</b><br />ClingAI is an AI-powered search and answer assistant designed to help users get instant, accurate answers in a beautiful, distraction-free UI.</li>
+          <li><b>Who created ClingAI?</b><br />ClingAI was founded by FaizuRrehman, a solo developer and entrepreneur from Pakistan, in 2025.</li>
+          <li><b>How many people are behind ClingAI?</b><br />Currently, ClingAI is built and maintained by a single person. However, media and graphics support is provided by CodeAndmotion, a backend partner focused on visuals and marketing content.</li>
+          <li><b>What makes ClingAI different from ChatGPT or Perplexity?</b><br />ClingAI is built for speed, clarity, and simplicity. It offers a minimal interface, tailored responses, and a focus on real-time productivity, unlike bloated chat platforms or over-complicated AI tools.</li>
+          <li><b>Is ClingAI free to use?</b><br />Yes, ClingAI offers a free plan with limited access. Paid subscriptions are also available with extended features, like unlimited searches, enhanced answer depth, and custom AI behaviors.</li>
+          <li><b>Can I follow ClingAI on social media?</b><br />Yes! Follow us on Twitter/X: <a href="https://x.com/Cling_AI" className="text-blue-600 hover:underline">@Cling_AI</a> to stay updated on new features, stories, and releases.</li>
+        </ul>
+        <h2 className="text-2xl font-bold text-blue-700 mt-10 mb-2">🚀 Looking Ahead</h2>
+        <p>ClingAI is just getting started. With more features, APIs, and integrations planned for the future, the goal is to become Pakistan’s first globally-known AI SaaS product — built by one, used by thousands.</p>
+        <p>If you're someone who values clarity, speed, and focus — we invite you to join us. Use ClingAI. Support independent builders. Help shape the future of AI.</p>
+      </div>
     </div>
   );
 } 

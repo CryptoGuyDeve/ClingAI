@@ -156,7 +156,7 @@ function AnswerDisplay({ searchInput, libId }) {
           await fetchHistory(); // Re-fetch after saving to prevent duplicates
         } else if (data?.error) {
           setError('Failed to fetch summary from Gemini.');
-        } else {
+    } else {
           setError('No summary found.');
         }
       })
@@ -205,30 +205,30 @@ function AnswerDisplay({ searchInput, libId }) {
                         }
                       }}
                     >{item.answer}</ReactMarkdown>
-                  </div>
+          </div>
                 ) : (
                   <div className="text-base leading-relaxed">
                     <ReactMarkdown>{item.answer}</ReactMarkdown>
-                  </div>
+        </div>
                 )}
                 {!item.answer && (
                   <div className="text-gray-400">No answer available.</div>
-                )}
-              </div>
-            </div>
+        )}
+      </div>
+          </div>
             {/* Separator */}
             {idx < history.length - 1 && (
               <div className="flex justify-center my-4">
                 <div className="h-4 w-1 bg-gray-300 rounded-full mx-2" />
                 <div className="h-4 w-1 bg-gray-300 rounded-full mx-2" />
                 <div className="h-4 w-1 bg-gray-300 rounded-full mx-2" />
-              </div>
-            )}
+        </div>
+      )}
           </div>
         ))}
         {loading && <div className="text-center text-gray-400 mt-4">Loading...</div>}
         {error && !loading && <div className="mt-8 w-full text-red-500 text-center">{error}</div>}
-        <style>{`
+      <style>{`
           @keyframes gradient-move {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
@@ -255,8 +255,8 @@ function AnswerDisplay({ searchInput, libId }) {
           }
           code {
             font-family: 'Fira Mono', 'Menlo', 'Monaco', 'Consolas', monospace;
-          }
-        `}</style>
+        }
+      `}</style>
       </div>
       <form
         onSubmit={handleChatSubmit}

@@ -87,7 +87,7 @@ function AppSidebar() {
         <div className='p-2 flex flex-col'>
           <h2 className='text-gray-600'>Try pro</h2>
           <p className='text-gray-400'>Upgrade for Image Upload, Smarter AI & more copilot</p>
-          <Button variant={'secondary'} className={'text-gray-500 mb-3'}>Learn More</Button>
+          <Button href={'/subscription'} variant={'secondary'} className={'text-gray-500 mb-3'}>Learn More</Button>
           <UserButton />
         </div>
       </SidebarFooter>
