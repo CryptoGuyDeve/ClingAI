@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ArrowRight, Atom, AudioLines, Cpu, Globe, Mic, Paperclip, SearchCheck } from 'lucide-react'
+import { ArrowRight, Atom, AudioLines, Cpu, Globe, Mic, Paperclip, SearchCheck, Code } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
     DropdownMenu,
@@ -17,6 +17,8 @@ import { supabase } from '@/services/supabase'
 import { useUser } from '@clerk/nextjs'
 import { v4 as uuidv4 } from 'uuid';
 import { useRouter } from 'next/navigation'
+import LoaderOverlay from "@/app/_components/LoaderOverlay";
+import Image from 'next/image';
 
 
 function ChatInputBox() {
@@ -46,6 +48,10 @@ function ChatInputBox() {
 
     return (
         <div className='flex flex-col h-screen items-center justify-center w-full'>
+            <LoaderOverlay show={loading} />
+            <div className="flex flex-col items-center mb-2">
+                <Image src="/blackpng.png" alt="ClingAI Logo" width={120} height={120} priority />
+            </div>
             <span className="font-extrabold text-5xl tracking-wide uppercase relative mb-8" style={{ color: '#243234' }}>
                 clingai
             </span>
@@ -55,9 +61,11 @@ function ChatInputBox() {
                     <Tabs defaultValue="Search" className="w-[400px]">
                         <TabsContent value="Search"><input type="text" placeholder='Ask Anything' onChange={(e) => setUserSearchInput(e.target.value)} className='w-full p-4 outline-none' /></TabsContent>
                         <TabsContent value="Research"><input type="text" placeholder='Research Anything' onChange={(e) => setUserSearchInput(e.target.value)} className='w-full p-4 outline-none' /></TabsContent>
+                        <TabsContent value="Code"><input type="text" placeholder='Code Anything' onChange={(e) => setUserSearchInput(e.target.value)} className='w-full p-4 outline-none' /></TabsContent>
                         <TabsList>
                             <TabsTrigger value="Search" className={'text-primary'} onClick={() => setSearchType('search')}> <SearchCheck /> Search</TabsTrigger>
                             <TabsTrigger value="Research" className={'text-primary'} onClick={() => setSearchType('research')}> <Atom /> Research</TabsTrigger>
+                            <TabsTrigger value="Code" className={'text-primary'} onClick={() => setSearchType('code')}> <Code /> Code</TabsTrigger>
                         </TabsList>
                     </Tabs>
                     <div className='flex gap-4 items-center'>

@@ -3,6 +3,7 @@ import React, { useEffect, useState, useRef } from 'react'
 import DOMPurify from 'dompurify';
 import ReactMarkdown from 'react-markdown';
 import { supabase } from '@/services/supabase';
+import LoaderOverlay from "@/app/_components/LoaderOverlay";
 
 function AnswerDisplay({ searchInput, libId }) {
   const [loading, setLoading] = useState(false);
@@ -17,19 +18,12 @@ function AnswerDisplay({ searchInput, libId }) {
     if (!libId) return;
     const { data: chats } = await supabase
       .from('Chats')
-      .select('id, aiResp, created_at')
+      .select('id, userQuery, aiResp, created_at')
       .eq('libId', libId)
       .order('created_at', { ascending: true });
     if (chats && chats.length > 0) {
-      let pairs = [];
-      let lastQuery = searchInput;
-      chats.forEach((chat, idx) => {
-        if (idx === 0 && searchInput) {
-          pairs.push({ query: searchInput, answer: chat.aiResp });
-        } else if (chat.aiResp) {
-          pairs.push({ query: '', answer: chat.aiResp });
-        }
-      });
+      // Each chat row now has userQuery and aiResp
+      const pairs = chats.map(chat => ({ query: chat.userQuery, answer: chat.aiResp }));
       setHistory(pairs);
     } else if (searchInput) {
       setHistory([{ query: searchInput, answer: '' }]);
@@ -54,9 +48,9 @@ function AnswerDisplay({ searchInput, libId }) {
   };
 
   // Save Gemini response to Supabase
-  const saveAIResponse = async (aiResp) => {
+  const saveAIResponse = async (userQuery, aiResp) => {
     if (!libId || !aiResp) return;
-    await supabase.from('Chats').insert({ libId, aiResp });
+    await supabase.from('Chats').insert({ libId, userQuery, aiResp });
   };
 
   // On initial searchInput prop, add to history if present
@@ -64,6 +58,11 @@ function AnswerDisplay({ searchInput, libId }) {
     if (!searchInput) return;
     setLoading(true);
     setError('');
+    // Only add initial search if not already present
+    if (history.length > 0 && history[0].query === searchInput) {
+      setLoading(false);
+      return;
+    }
     const contents = buildGeminiHistory([], searchInput);
     fetch('/api/chatgpt-brief', {
       method: 'POST',
@@ -73,19 +72,19 @@ function AnswerDisplay({ searchInput, libId }) {
       .then(res => res.json())
       .then(async data => {
         if (data?.summary) {
-          setHistory(prev => [...prev, { query: searchInput, answer: data.summary }]);
-          await saveAIResponse(data.summary);
+          // Only save if not already present
+          if (!(history.length > 0 && history[0].query === searchInput)) {
+            await saveAIResponse(searchInput, data.summary);
+            await fetchHistory();
+          }
         } else if (data?.error) {
           setError('Failed to fetch summary from Gemini.');
-          setHistory(prev => [...prev, { query: searchInput, answer: '' }]);
         } else {
           setError('No summary found.');
-          setHistory(prev => [...prev, { query: searchInput, answer: '' }]);
         }
       })
       .catch((err) => {
         setError('Failed to fetch summary from Gemini.');
-        setHistory(prev => [...prev, { query: searchInput, answer: '' }]);
       })
       .finally(() => {
         setLoading(false);
@@ -109,19 +108,16 @@ function AnswerDisplay({ searchInput, libId }) {
       .then(res => res.json())
       .then(async data => {
         if (data?.summary) {
-          await saveAIResponse(data.summary);
+          await saveAIResponse(userQuery, data.summary);
           await fetchHistory(); // Re-fetch after saving to prevent duplicates
         } else if (data?.error) {
           setError('Failed to fetch summary from Gemini.');
-          setHistory(prev => [...prev, { query: userQuery, answer: '' }]);
-    } else {
+        } else {
           setError('No summary found.');
-          setHistory(prev => [...prev, { query: userQuery, answer: '' }]);
         }
       })
       .catch(() => {
         setError('Failed to fetch summary from Gemini.');
-        setHistory(prev => [...prev, { query: userQuery, answer: '' }]);
       })
       .finally(() => {
         setLoading(false);
@@ -130,24 +126,28 @@ function AnswerDisplay({ searchInput, libId }) {
   };
 
   return (
-    <div className="relative mt-5 w-full max-w-2xl mx-auto" style={{height: '80vh', display: 'flex', flexDirection: 'column'}}>
+    <div className="relative mt-5 w-full max-w-2xl mx-auto flex flex-col items-center" style={{ minHeight: '80vh' }}>
+      {/* Animated background */}
+      {/* <div className="absolute inset-0 -z-10 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 animate-gradient-move" /> */}
+      <LoaderOverlay show={loading} />
+      {/* Remove glassy card for chat area, render content directly */}
       {/* Web results carousel at the top */}
       <WebCarousel searchInput={searchInput} />
-      <div className="flex-1 pb-20">
+      <div className="flex-1 pb-20 w-full">
         {history.length === 0 && !loading && (
           <div className="mt-8 w-full text-gray-400 text-center">No results yet. Start a conversation!</div>
         )}
         {history.map((item, idx) => (
           <div key={idx} className="mb-8">
             {/* User message */}
-            <div className="flex mb-2">
-              <div className="bg-blue-100 text-blue-900 px-4 py-2 rounded-lg max-w-[80%] ml-auto shadow">
+            <div className="flex mb-2 justify-end">
+              <div className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-5 py-3 rounded-2xl max-w-[80%] shadow-lg font-medium text-base transition-all duration-200 animate-pop">
                 <span className="font-semibold">You:</span> {item.query}
               </div>
             </div>
             {/* Gemini answer */}
             <div className="flex">
-              <div className="bg-gray-100 text-gray-900 px-4 py-2 rounded-lg max-w-[80%] mr-auto shadow">
+              <div className="bg-white/80 border border-gray-100 text-gray-900 px-5 py-3 rounded-2xl max-w-[80%] shadow-md backdrop-blur-sm transition-all duration-200 animate-pop">
                 {item.answer && /```/.test(item.answer) ? (
                   <div className="prose prose-slate max-w-none">
                     <ReactMarkdown
@@ -161,30 +161,46 @@ function AnswerDisplay({ searchInput, libId }) {
                         }
                       }}
                     >{item.answer}</ReactMarkdown>
-          </div>
+                  </div>
                 ) : (
                   <div className="text-base leading-relaxed">
                     <ReactMarkdown>{item.answer}</ReactMarkdown>
-        </div>
+                  </div>
                 )}
                 {!item.answer && (
                   <div className="text-gray-400">No answer available.</div>
-        )}
-      </div>
-          </div>
+                )}
+              </div>
+            </div>
             {/* Separator */}
             {idx < history.length - 1 && (
               <div className="flex justify-center my-4">
                 <div className="h-4 w-1 bg-gray-300 rounded-full mx-2" />
                 <div className="h-4 w-1 bg-gray-300 rounded-full mx-2" />
                 <div className="h-4 w-1 bg-gray-300 rounded-full mx-2" />
-        </div>
-      )}
+              </div>
+            )}
           </div>
         ))}
         {loading && <div className="text-center text-gray-400 mt-4">Loading...</div>}
         {error && !loading && <div className="mt-8 w-full text-red-500 text-center">{error}</div>}
-      <style>{`
+        <style>{`
+          @keyframes gradient-move {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+          }
+          .animate-gradient-move {
+            background-size: 200% 200%;
+            animation: gradient-move 8s ease-in-out infinite;
+          }
+          .animate-pop {
+            animation: pop-in 0.4s cubic-bezier(.23,1.02,.64,1.01);
+          }
+          @keyframes pop-in {
+            0% { transform: scale(0.95); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+          }
           pre {
             background: #1a202c;
             color: #fff;
@@ -195,42 +211,42 @@ function AnswerDisplay({ searchInput, libId }) {
           }
           code {
             font-family: 'Fira Mono', 'Menlo', 'Monaco', 'Consolas', monospace;
-        }
-      `}</style>
+          }
+        `}</style>
       </div>
       <form
         onSubmit={handleChatSubmit}
-        className="sticky bottom-0 z-20 bg-gradient-to-r from-white via-blue-50 to-white border-t border-gray-200 flex items-center gap-2 px-4 py-3 rounded-b-2xl shadow-lg"
+        className="sticky bottom-0 z-20 border-t border-gray-200 flex items-center gap-2 px-4 py-3 rounded-b-2xl shadow-lg bg-transparent"
         style={{ minHeight: 64 }}
       >
         <input
           ref={chatInputRef}
           type="text"
-          className="flex-1 px-4 py-3 border-none rounded-xl bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400 text-base shadow-sm transition"
+          className="flex-1 px-4 py-3 border-none rounded-xl bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-400 text-base shadow-sm transition"
           placeholder="Ask anything..."
           value={chatValue}
           onChange={e => setChatValue(e.target.value)}
           aria-label="Ask more about this topic"
         />
-       {chatValue && (
-         <button
-           type="button"
-           onClick={() => setChatValue('')}
-           className="text-gray-400 hover:text-gray-600 px-2 focus:outline-none"
-           tabIndex={-1}
-           aria-label="Clear input"
-         >
-           &#10005;
-         </button>
-       )}
-        <button
-          type="submit"
-          className="ml-2 px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold shadow hover:from-blue-700 hover:to-purple-700 transition disabled:opacity-50"
-          disabled={loading || !chatValue.trim()}
-        >
-          Ask
-        </button>
-      </form>
+         {chatValue && (
+           <button
+             type="button"
+             onClick={() => setChatValue('')}
+             className="text-gray-400 hover:text-gray-600 px-2 focus:outline-none"
+             tabIndex={-1}
+             aria-label="Clear input"
+           >
+             &#10005;
+           </button>
+         )}
+          <button
+            type="submit"
+            className="ml-2 px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold shadow hover:from-blue-700 hover:to-purple-700 transition disabled:opacity-50"
+            disabled={loading || !chatValue.trim()}
+          >
+            Ask
+          </button>
+        </form>
     </div>
   )
 }
@@ -277,7 +293,7 @@ function ImagesDisplay({ searchInput }) {
             rel="noopener noreferrer"
             className="block group"
           >
-            <div className="relative w-full aspect-square bg-gray-100 rounded-lg overflow-hidden">
+            <div className="relative w-full aspect-square rounded-lg overflow-hidden" style={{ background: 'transparent' }}>
               <Image
                 src={img.thumbnail?.src || img.properties?.url || img.url}
                 alt={img.title || 'Image'}
