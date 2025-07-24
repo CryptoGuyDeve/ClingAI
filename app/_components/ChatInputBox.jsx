@@ -104,7 +104,7 @@ function ChatInputBox() {
                 {error && error.includes('credits left') && (
                   <div className="flex justify-center mb-2">
                     <Button onClick={handleBuySubscription} disabled={loading} className="bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold px-6 py-2 rounded-xl">
-                      Buy Subscription ($10/month)
+                      Buy Subscription ($5/month)
                     </Button>
                   </div>
                 )}
