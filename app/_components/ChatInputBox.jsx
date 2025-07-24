@@ -19,6 +19,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { useRouter } from 'next/navigation'
 import LoaderOverlay from "@/app/_components/LoaderOverlay";
 import Image from 'next/image';
+import { useContext } from 'react';
+import { UserDetailContext } from '@/context/UserDetailContext';
 
 
 function ChatInputBox() {
@@ -27,9 +29,26 @@ function ChatInputBox() {
     const { user } = useUser();
     const [loading,setLoading]=useState(false);
     const router=useRouter();
+    const { userDetail, setUserDetail } = useContext(UserDetailContext);
+    const [error, setError] = useState('');
 
     const onSearchQuery = async () => {
         setLoading(true);
+        setError('');
+        // Always fetch latest user data
+        let latestUser = userDetail;
+        if (userDetail?.email) {
+          const { data: users } = await supabase
+            .from('Users')
+            .select('*')
+            .eq('email', userDetail.email);
+          if (users && users.length > 0) latestUser = users[0];
+        }
+        if (!latestUser?.is_subscribed && (latestUser?.credits ?? 0) <= 10) {
+          setError('You have ' + (latestUser?.credits ?? 0) + ' credits left. Please buy a subscription to continue.');
+          setLoading(false);
+          return;
+        }
         const libId=uuidv4();
         const {data} = await supabase.from('Library').insert([
             {
@@ -46,6 +65,29 @@ function ChatInputBox() {
         console.log(data[0])
     }
 
+    const handleBuySubscription = async () => {
+      if (!userDetail?.email) return;
+      setLoading(true);
+      setError('');
+      try {
+        const res = await fetch('/api/stripe-create-checkout-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: userDetail.email })
+        });
+        const data = await res.json();
+        if (data.url) {
+          window.location.href = data.url;
+        } else {
+          setError('Failed to start Stripe checkout.');
+          setLoading(false);
+        }
+      } catch (err) {
+        setError('Stripe error.');
+        setLoading(false);
+      }
+    };
+
     return (
         <div className='flex flex-col h-screen items-center justify-center w-full'>
             <LoaderOverlay show={loading} />
@@ -56,7 +98,16 @@ function ChatInputBox() {
                 clingai
             </span>
             <div className="p-2 w-full max-w-2xl border rounded-2xl mt-10">
-
+                {error && (
+                  <div className="text-red-500 text-center font-semibold mb-2">{error}</div>
+                )}
+                {error && error.includes('credits left') && (
+                  <div className="flex justify-center mb-2">
+                    <Button onClick={handleBuySubscription} disabled={loading} className="bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold px-6 py-2 rounded-xl">
+                      Buy Subscription ($10/month)
+                    </Button>
+                  </div>
+                )}
                 <div className='flex justify-between items-end'>
                     <Tabs defaultValue="Search" className="w-[400px]">
                         <TabsContent value="Search"><input type="text" placeholder='Ask Anything' onChange={(e) => setUserSearchInput(e.target.value)} className='w-full p-4 outline-none' /></TabsContent>
@@ -104,4 +155,4 @@ function ChatInputBox() {
     )
 }
 
-export default ChatInputBox
+export default ChatInputBox;

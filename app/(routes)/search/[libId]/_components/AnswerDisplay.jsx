@@ -1,17 +1,21 @@
 import Image from 'next/image';
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState, useRef, useContext } from 'react'
 import DOMPurify from 'dompurify';
 import ReactMarkdown from 'react-markdown';
 import { supabase } from '@/services/supabase';
 import LoaderOverlay from "@/app/_components/LoaderOverlay";
+import { useEffect as useReactEffect } from 'react';
+import { UserDetailContext } from '@/context/UserDetailContext';
 
 function AnswerDisplay({ searchInput, libId }) {
+  const { userDetail, setUserDetail } = useContext(UserDetailContext);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [chatValue, setChatValue] = useState('');
   const chatInputRef = useRef(null);
   // Chat history: [{query, answer}]
   const [history, setHistory] = useState([]);
+  const [blocked, setBlocked] = useState(false);
 
   // Helper to fetch all previous chats for this libId
   const fetchHistory = async () => {
@@ -31,10 +35,24 @@ function AnswerDisplay({ searchInput, libId }) {
   };
 
   // On mount, fetch all previous chats for this libId
-  useEffect(() => {
+  useReactEffect(() => {
     fetchHistory();
     // eslint-disable-next-line
   }, [libId]);
+
+  // Fetch latest user credits/subscription on mount and after each search
+  const fetchUserDetail = async () => {
+    if (!userDetail?.email) return;
+    const { data: users } = await supabase
+      .from('Users')
+      .select('*')
+      .eq('email', userDetail.email);
+    if (users && users.length > 0) setUserDetail(users[0]);
+  };
+
+  useReactEffect(() => {
+    fetchUserDetail();
+  }, []);
 
   // Helper to build Gemini contents array from history
   const buildGeminiHistory = (historyArr, newUserMsg) => {
@@ -92,9 +110,24 @@ function AnswerDisplay({ searchInput, libId }) {
     // eslint-disable-next-line
   }, [searchInput]);
 
-  const handleChatSubmit = (e) => {
+  const handleChatSubmit = async (e) => {
     e.preventDefault();
     if (!chatValue.trim()) return;
+    // Always fetch latest user credits/subscription before allowing search
+    let latestUser = userDetail;
+    if (userDetail?.email) {
+      const { data: users } = await supabase
+        .from('Users')
+        .select('*')
+        .eq('email', userDetail.email);
+      if (users && users.length > 0) latestUser = users[0];
+    }
+    console.log('DEBUG: latestUser before search', latestUser);
+    if (!latestUser?.is_subscribed && (latestUser?.credits ?? 0) < 10) {
+      setBlocked(true);
+      console.log('DEBUG: Blocked due to insufficient credits', latestUser.credits);
+      return;
+    }
     setLoading(true);
     setError('');
     const userQuery = chatValue.trim();
@@ -109,6 +142,17 @@ function AnswerDisplay({ searchInput, libId }) {
       .then(async data => {
         if (data?.summary) {
           await saveAIResponse(userQuery, data.summary);
+          // Deduct 10 credits if not subscribed
+          if (!latestUser?.is_subscribed) {
+            const newCredits = (latestUser.credits ?? 0) - 10;
+            await supabase.from('Users')
+              .update({ credits: newCredits })
+              .eq('email', latestUser.email);
+            console.log('DEBUG: Deducted credits, newCredits:', newCredits);
+            setUserDetail({ ...latestUser, credits: newCredits });
+            if (newCredits < 10) setBlocked(true);
+            if (newCredits < 10) console.log('DEBUG: Blocked after deduction, newCredits:', newCredits);
+          }
           await fetchHistory(); // Re-fetch after saving to prevent duplicates
         } else if (data?.error) {
           setError('Failed to fetch summary from Gemini.');
@@ -219,6 +263,12 @@ function AnswerDisplay({ searchInput, libId }) {
         className="sticky bottom-0 z-20 border-t border-gray-200 flex items-center gap-2 px-4 py-3 rounded-b-2xl shadow-lg bg-transparent"
         style={{ minHeight: 64 }}
       >
+        {blocked && (
+          <div className="w-full text-center text-red-500 font-semibold mb-2">
+            You are out of credits. Please subscribe to continue.
+            {/* TODO: Add Stripe payment button here */}
+          </div>
+        )}
         <input
           ref={chatInputRef}
           type="text"

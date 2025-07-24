@@ -29,7 +29,9 @@ function Provider({ children }) {
                 .insert([
                     {
                         name:user?.fullName,
-                        email:user?.primaryEmailAddress.emailAddress
+                        email:user?.primaryEmailAddress.emailAddress,
+                        credits: 50,
+                        is_subscribed: false
                     },
                 ])
                 .select();

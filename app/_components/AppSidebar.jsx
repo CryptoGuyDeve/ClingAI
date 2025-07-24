@@ -10,7 +10,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { Compass, GalleryHorizontal, LogIn, Search } from 'lucide-react'
+import { Compass, GalleryHorizontal, LogIn, Search, DollarSign } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { SignOutButton, SignUpButton, UserButton, useUser } from '@clerk/nextjs'
@@ -30,6 +30,11 @@ const MenuOptions = [
     title: 'Library',
     icon: GalleryHorizontal,
     path: '/library'
+  },
+  {
+    title: 'Subscription',
+    icon: DollarSign,
+    path: '/subscription'
   },
 ]
 
