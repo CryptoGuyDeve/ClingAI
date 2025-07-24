@@ -51,6 +51,9 @@ export default function SubscriptionPage() {
           Buy Subscription
         </Button>
         {error && <div className="text-red-500 text-center font-semibold mt-4">{error}</div>}
+        <div className="text-yellow-600 text-center text-sm mt-4 font-medium">
+          Note: Due to high demand, it may take 1-2 hours for your credits to update after payment. Thank you for your patience!
+        </div>
       </div>
       <div className="text-gray-400 text-sm text-center max-w-md">
         After payment, your account will be instantly upgraded and 200+ credits will be added every month. Cancel anytime.

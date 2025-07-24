@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ArrowRight, Atom, AudioLines, Cpu, Globe, Mic, Paperclip, SearchCheck, Code } from 'lucide-react'
+import { ArrowRight, Atom, AudioLines, Cpu, Globe, Mic, Paperclip, SearchCheck, Code, Zap } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
     DropdownMenu,
@@ -21,6 +21,7 @@ import LoaderOverlay from "@/app/_components/LoaderOverlay";
 import Image from 'next/image';
 import { useContext } from 'react';
 import { UserDetailContext } from '@/context/UserDetailContext';
+import { useEffect } from 'react';
 
 
 function ChatInputBox() {
@@ -31,6 +32,20 @@ function ChatInputBox() {
     const router=useRouter();
     const { userDetail, setUserDetail } = useContext(UserDetailContext);
     const [error, setError] = useState('');
+
+    // Poll for real-time credits
+    useEffect(() => {
+      const interval = setInterval(async () => {
+        if (userDetail?.email) {
+          const { data: users } = await supabase
+            .from('Users')
+            .select('credits')
+            .eq('email', userDetail.email);
+          if (users && users.length > 0) setUserDetail({ ...userDetail, credits: users[0].credits });
+        }
+      }, 10000);
+      return () => clearInterval(interval);
+    }, [userDetail?.email]);
 
     const onSearchQuery = async () => {
         setLoading(true);
@@ -48,6 +63,12 @@ function ChatInputBox() {
           setError('You have ' + (latestUser?.credits ?? 0) + ' credits left. Please buy a subscription to continue.');
           setLoading(false);
           return;
+        }
+        // Deduct 10 credits if not subscribed
+        if (!latestUser?.is_subscribed) {
+          const newCredits = (latestUser.credits ?? 0) - 10;
+          await supabase.from('Users').update({ credits: newCredits }).eq('email', latestUser.email);
+          setUserDetail({ ...latestUser, credits: newCredits });
         }
         const libId=uuidv4();
         const {data} = await supabase.from('Library').insert([
@@ -91,6 +112,10 @@ function ChatInputBox() {
     return (
         <div className='flex flex-col h-screen items-center justify-center w-full'>
             <LoaderOverlay show={loading} />
+            <div className="flex gap-2 items-center bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-1 mb-4 mt-2 self-end">
+              <Zap className='h-5 w-5 text-yellow-500' />
+              <span className='font-bold text-yellow-700 text-base'>{userDetail?.credits ?? 0} credits</span>
+            </div>
             <div className="flex flex-col items-center mb-2">
                 <Image src="/blackpng.png" alt="ClingAI Logo" width={120} height={120} priority />
             </div>
@@ -100,6 +125,11 @@ function ChatInputBox() {
             <div className="p-2 w-full max-w-2xl border rounded-2xl mt-10">
                 {error && (
                   <div className="text-red-500 text-center font-semibold mb-2">{error}</div>
+                )}
+                {error && error.includes('credits left') && (
+                  <div className="text-yellow-600 text-center text-sm mb-2 font-medium">
+                    Note: Due to high demand, it may take 1-2 hours for your credits to update after payment. Thank you for your patience!
+                  </div>
                 )}
                 {error && error.includes('credits left') && (
                   <div className="flex justify-center mb-2">

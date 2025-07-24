@@ -3,8 +3,28 @@ import { UserButton } from '@clerk/nextjs'
 import { Clock, Link, Send } from 'lucide-react'
 import moment from 'moment'
 import React, { useState } from 'react'
+import { useContext, useEffect } from 'react';
+import { UserDetailContext } from '@/context/UserDetailContext';
+import { Zap } from 'lucide-react';
 
 function Header({ searchInputRecord }) {
+    const { userDetail, setUserDetail } = useContext(UserDetailContext);
+    // Optionally, poll for real-time updates
+    useEffect(() => {
+      const interval = setInterval(async () => {
+        if (userDetail?.email) {
+          const { data: users } = await import('@/services/supabase').then(m => m.supabase)
+            .then(supabase => supabase
+              .from('Users')
+              .select('credits')
+              .eq('email', userDetail.email)
+            )
+            .then(({ data }) => data);
+          if (users && users.length > 0) setUserDetail({ ...userDetail, credits: users[0].credits });
+        }
+      }, 10000); // every 10 seconds
+      return () => clearInterval(interval);
+    }, [userDetail?.email]);
     const [copied, setCopied] = useState(false);
     const [shareError, setShareError] = useState('');
     const chatUrl = typeof window !== 'undefined' ? window.location.href : '';
@@ -43,6 +63,10 @@ function Header({ searchInputRecord }) {
         <div className='p-4 border-b flex flex-wrap justify-between items-center gap-4'>
             <div className='flex gap-2 items-center min-w-0'>
                 <UserButton />
+                <div className='flex gap-2 items-center bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-1 ml-2'>
+                  <Zap className='h-5 w-5 text-yellow-500' />
+                  <span className='font-bold text-yellow-700 text-base'>{userDetail?.credits ?? 0} credits</span>
+                </div>
                 <div className='flex gap-1 items-center'>
                     <Clock className='h-5 w-5 text-gray-500' />
                     <h2 className='text-sm text-gray-500'>
